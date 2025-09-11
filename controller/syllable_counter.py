@@ -12,21 +12,17 @@ class SyllableCounter:
             raise TypeError("dictionary_words must be a list of strings.")
         
         if not dictionary_words:
-            print("Không có từ nào trong từ điển để phân tích.")
             return 0
 
         self.unique_phonemic_syllables = set()
 
         for word_entry in dictionary_words:
-            # Use the phonemizer to convert the word entry into phonemic syllables
-            phonemic_representation = self.phonemizer.phonemize(word_entry)
-            
-            # The phonemize method returns a string of phonemic syllables separated by spaces.
-            individual_phonemic_syllables = phonemic_representation.split(' ')
-            
-            for syllable in individual_phonemic_syllables:
-                if syllable:
-                    self.unique_phonemic_syllables.add(syllable)
+            # Only use the first field (before tab) and split by spaces to get syllables
+            syllables = word_entry.split("\t")[0].strip().split()
+            for syllable in syllables:
+                phonemic_syllable = self.phonemizer.phonemize(syllable)
+                if phonemic_syllable:
+                    self.unique_phonemic_syllables.add(phonemic_syllable)
         
         return len(self.unique_phonemic_syllables)
 
