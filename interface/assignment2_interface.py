@@ -1,15 +1,14 @@
 import gradio as gr
 import string
+from controller.vietnamese_phonemizer import VietnamesePhonemizer
+from controller.dictionary_loader import DictionaryLoader
+from controller.syllable_counter import SyllableCounter
 
 PAGE_SIZE = 12
 
-def load_dictionary():
-    try:
-        with open("resources/VDic_uni.txt", encoding="utf-8") as f:
-            lines = [line.strip() for line in f]
-        return lines
-    except Exception as e:
-        return [f"Error loading dictionary: {e}"]
+dict_loader = DictionaryLoader()
+phonemizer = VietnamesePhonemizer()
+syllable_counter = SyllableCounter(phonemizer)
 
 def get_page(lines, page, page_size=PAGE_SIZE):
     start = page * page_size
@@ -67,7 +66,7 @@ def create_assignment2_demo():
         gr.Markdown("* Đỗ Hoài Nam - 24C12021")
 
         with gr.Accordion(f"Xem từng trang từ điển VDic_uni ({PAGE_SIZE} dòng/trang)", open=False):
-            dict_lines = load_dictionary()
+            dict_lines = dict_loader.get_lines()
             total_pages = (len(dict_lines) + PAGE_SIZE - 1) // PAGE_SIZE
             page_state = gr.State(0)
 
@@ -105,4 +104,11 @@ def create_assignment2_demo():
             prev_btn.click(lambda page: update_page(page-1), inputs=page_state, outputs=[dataframe, page_label, page_state])
             next_btn.click(lambda page: update_page(page+1), inputs=page_state, outputs=[dataframe, page_label, page_state])
             goto_btn.click(lambda word: goto_word(word), inputs=goto_input, outputs=[dataframe, page_label, page_state])
+
+        # UI for SyllableCounter result (show at the beginning, no button needed)
+        count = syllable_counter.count_unique_syllables([line.split("\t")[0] for line in dict_loader.get_lines() if line])
+        syllables = ", ".join(sorted(syllable_counter.get_unique_syllables()))
+        gr.Markdown(f"## Kết quả đếm âm tiết phiên âm duy nhất trong từ điển")
+        gr.Textbox(value=str(count), label="Số lượng âm tiết duy nhất", interactive=False)
+        gr.Textbox(value=syllables, label="Danh sách âm tiết duy nhất (cách nhau bởi dấu phẩy)", interactive=False)
     return demo

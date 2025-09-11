@@ -1,5 +1,12 @@
 import gradio as gr
-from main import process_input
+from controller.vietnamese_phonemizer import VietnamesePhonemizer
+
+def process_input(user_input):
+    if not user_input:
+        return "Please enter some text!"
+    vietnamese_phonemizer = VietnamesePhonemizer()
+    result = vietnamese_phonemizer.phonemize(user_input)
+    return result
 
 def create_assignment1_demo():
     with gr.Blocks() as demo:

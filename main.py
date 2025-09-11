@@ -1,4 +1,4 @@
-from vietnamese_phonemizer import VietnamesePhonemizer
+from controller.vietnamese_phonemizer import VietnamesePhonemizer
 
 def process_input(user_input):
     if not user_input:
