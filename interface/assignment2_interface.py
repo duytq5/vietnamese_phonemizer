@@ -1,3 +1,4 @@
+from .sub_assignment_ui import subAssigmentCollapsibleUI
 import gradio as gr
 import string
 from controller.vietnamese_phonemizer import VietnamesePhonemizer
@@ -57,10 +58,76 @@ custom_css = '''
     }
 '''
 
+
+def assignment2_ui_2_1():
+    ui = subAssigmentCollapsibleUI("2.1/ Số lượng âm tiết tiếng Việt khác nhau có trong từ điển", open=True)
+    with ui.block:
+        count = syllable_counter.count_unique_syllables([line.split("\t")[0] for line in dict_loader.get_lines() if line])
+        written_syllables = set()
+        for line in dict_loader.get_lines():
+            if line:
+                words = line.split("\t")[0].strip().split()
+                written_syllables.update(words)
+        written_syllables_str = ", ".join(sorted(written_syllables))
+        gr.Textbox(value=str(count), label="Số lượng âm tiết duy nhất", interactive=False)
+        gr.Textbox(value=written_syllables_str, label="Danh sách âm tiết duy nhất (cách nhau bởi dấu phẩy)", interactive=False)
+
+def assignment2_ui_2_2():
+    ui = subAssigmentCollapsibleUI("2.2/ Số lượng âm tiết khả dĩ có trong tiếng Việt tính theo tổ hợp", open=True)
+    with ui.block:
+        gr.Markdown("[Phụ_âm_đầu * Âm_Đệm * Âm_Chính * Âm_Cuối * Thanh_điệu]")
+
+        n_onset = len(phonemizer.onset_map)
+        n_glide = len(phonemizer.glide_map) + 1  # +1 for no-glide
+        n_nucleus = len(phonemizer.nucleus_map)
+        n_coda = len(phonemizer.coda_map) + 1    # +1 for no-coda
+        n_tone = len(phonemizer.tone_map)
+
+        with gr.Accordion(f"Bản đồ phụ âm đầu (onset) — Số lượng: {n_onset}", open=False):
+            gr.Dataframe(
+                headers=["Phụ âm đầu", "Phiên âm"],
+                value=[[k, v] for k, v in phonemizer.onset_map.items()],
+                interactive=False
+            )
+        with gr.Accordion(f"Bản đồ âm đệm (glide) — Số lượng: {len(phonemizer.glide_map)} (+1 không âm đệm) = {n_glide}", open=False):
+            gr.Dataframe(
+                headers=["Âm đệm", "Phiên âm"],
+                value=[[k, v] for k, v in phonemizer.glide_map.items()],
+                interactive=False
+            )
+        with gr.Accordion(f"Bản đồ âm chính (nucleus) — Số lượng: {n_nucleus}", open=False):
+            gr.Dataframe(
+                headers=["Âm chính", "Phiên âm"],
+                value=[[k, v] if not isinstance(v, dict) else [k, str(v)] for k, v in phonemizer.nucleus_map.items()],
+                interactive=False
+            )
+        with gr.Accordion(f"Bản đồ âm cuối (coda) — Số lượng: {len(phonemizer.coda_map)} (+1 không âm cuối) = {n_coda}", open=False):
+            gr.Dataframe(
+                headers=["Âm cuối", "Phiên âm"],
+                value=[[k, v] for k, v in phonemizer.coda_map.items()],
+                interactive=False
+            )
+        with gr.Accordion(f"Bản đồ thanh điệu (tone) — Số lượng: {n_tone}", open=False):
+            gr.Dataframe(
+                headers=["Thanh điệu", "Ký hiệu"],
+                value=[[k, v] for k, v in phonemizer.tone_map.items()],
+                interactive=False
+            )
+
+        possible_syllables = phonemizer.count_possible_syllables()
+        formula_str = f"Số lượng âm tiết khả dĩ = onset * glide * nucleus * coda * tone = {n_onset} * {n_glide} * {n_nucleus} * {n_coda} * {n_tone} = {possible_syllables}"
+        gr.Textbox(value=formula_str, label="Công thức tính số lượng âm tiết khả dĩ", interactive=False)
+
+def assignment2_ui_2_3():
+    ui = subAssigmentCollapsibleUI("2.3/ So sánh 2 con số (2.1) và (2.2) và giải thích lý do tại sao có sự chênh lệch này?", open=True)
+    with ui.block:
+        with open(r"c:/Workspace/HCMUS/Voice Processing/vietnamese_phonemizer/resources/assignment2.3.md", encoding="utf-8") as f:
+            md_content = f.read()
+        gr.Markdown(md_content)
+
 def create_assignment2_demo():
     with gr.Blocks(css=custom_css) as demo:
         gr.Markdown("# Đồ án giữa kỳ #2")
-        gr.Markdown("### Số lượng âm tiết tiếng Việt khác nhau có trong từ điển.")
         gr.Markdown("### Thành viên:")
         gr.Markdown("* Trần Quang Duy - 24C12027")
         gr.Markdown("* Đỗ Hoài Nam - 24C12021")
@@ -105,16 +172,7 @@ def create_assignment2_demo():
             next_btn.click(lambda page: update_page(page+1), inputs=page_state, outputs=[dataframe, page_label, page_state])
             goto_btn.click(lambda word: goto_word(word), inputs=goto_input, outputs=[dataframe, page_label, page_state])
 
-        # UI for SyllableCounter result (show at the beginning, no button needed)
-        count = syllable_counter.count_unique_syllables([line.split("\t")[0] for line in dict_loader.get_lines() if line])
-        # Get unique written syllables (not phonemized)
-        written_syllables = set()
-        for line in dict_loader.get_lines():
-            if line:
-                words = line.split("\t")[0].strip().split()
-                written_syllables.update(words)
-        written_syllables_str = ", ".join(sorted(written_syllables))
-        gr.Markdown(f"## Kết quả đếm âm tiết phiên âm duy nhất trong từ điển")
-        gr.Textbox(value=str(count), label="Số lượng âm tiết duy nhất", interactive=False)
-        gr.Textbox(value=written_syllables_str, label="Danh sách âm tiết duy nhất (cách nhau bởi dấu phẩy)", interactive=False)
+    assignment2_ui_2_1()
+    assignment2_ui_2_2()
+    assignment2_ui_2_3()
     return demo

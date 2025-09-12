@@ -1,174 +1,184 @@
-# This script removes non-Vietnamese words from VDic_uni_<x>.txt files in VDic_uni_split
-# It uses a regex-based heuristic for Vietnamese words, NOT just skipping 'Np'.
+# -*- coding: utf-8 -*-
+# This script removes non-Vietnamese words from VDic_uni.txt and VDic_uni_<x>.txt files in VDic_uni_split
+# It validates tokens by Vietnamese syllable structure:
+#   syllable = [onset] + [medial] + nucleus + [coda]
+# and enforces tone <-> coda compatibility:
+#   - syllables ending in stops (p, t, c/ch) are allowed only with "sắc" or "nặng" tones.
+
 import os
 import re
-import os
-import re
+import unicodedata
 
-# Vietnamese word pattern: letters (with diacritics), spaces, hyphens
-vietnamese_pattern = re.compile(r"^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\s]+$")
+# --- Configuration: phonotactic pieces (orthographic forms) ---
+ONSETS = [
+    "ngh", "ng", "gh", "kh", "ph", "th", "tr", "ch", "qu",  # multi-letter onsets first
+    "b", "c", "d", "đ", "g", "h", "k", "l", "m", "n", "nh",
+    "p", "r", "s", "t", "v", "x", ""
+]
 
-def contains_vietnamese_vowel(s):
-    # Danh sách nguyên âm tiếng Việt (cả chữ thường và chữ hoa)
-    vowels = "aăâeêioôơuưyAĂÂEÊIOÔƠUƯY"
-    # Kiểm tra từng ký tự trong chuỗi
-    for char in s:
-        if char in vowels:
-            return True
+MEDIALS = ["", "o", "u"]  # medial (glide) allowed after onset, except when onset == "qu"
+
+# Basic vowel inventory and common diphthongs/triphthongs (orthographic forms after tone removal)
+NUCLEI = set([
+    # simple vowels
+    "a", "ă", "â", "e", "ê", "i", "o", "ô", "ơ", "u", "ư", "y",
+    # common diphthongs/triphthongs (not exhaustively enumerated but covers usual patterns)
+    "ai","ay","ao","au","âu","ây",
+    "oi","ôi","ơi","oe","uê","ui","uy",
+    "ia","iê","iu","ya","yê",
+    "ua","uô","uơ","ưa","ươ","uâ",
+    "oa","oă","oe","oai","oay","oă",
+    "êu","eo","êu",
+    # allow simple single vowel as well (already above)
+])
+
+CODAS = ["ch", "ng", "nh", "c", "m", "n", "p", "t", ""]  # coda list with multi-letter forms first
+
+# codas that are oral stops and restrict tones
+STOP_CODAS = {"p", "t", "c", "ch"}
+
+# quick set of base vowel characters used for nucleus validation (after tone removal)
+VOWEL_BASES = set(list("aăâeêioôơuưy"))
+
+# regex to roughly ensure tokens contain only letters/punctuation we expect (reject digits/punct-heavy tokens)
+# keeps Vietnamese letters (precomposed) and ASCII letters and hyphen (we'll reject hyphenated tokens later).
+TOKEN_ALPHABET_RE = re.compile(r"^[\w\-\u00C0-\u1EF9]+$", re.UNICODE)
+
+# tone combining marks (NFD combining characters)
+_TONE_MARKS = {"\u0300", "\u0301", "\u0303", "\u0309", "\u0323"}  # huyền, sắc, ngã, hỏi, nặng
+
+
+BLACKLIST = {"cy", "qy", "py"}  # add more as discovered
+
+
+def get_tone(token: str) -> str:
+    """
+    Return the tone name for the given token.
+    If no tone mark found, returns 'ngang'.
+    Possible returns: 'ngang', 'sắc', 'huyền', 'hỏi', 'ngã', 'nặng'
+    """
+    for ch in token:
+        decomp = unicodedata.normalize("NFD", ch)
+        for comb in decomp[1:]:
+            if comb == "\u0301":
+                return "sắc"
+            if comb == "\u0300":
+                return "huyền"
+            if comb == "\u0309":
+                return "hỏi"
+            if comb == "\u0303":
+                return "ngã"
+            if comb == "\u0323":
+                return "nặng"
+    return "ngang"
+
+def remove_tone_marks(token: str) -> str:
+    """
+    Remove only Vietnamese tone combining marks from a token while keeping other diacritics
+    (breve, circumflex, horn, etc.). Implementation:
+      - NFD normalize each character,
+      - drop combining characters that are tone marks (0300,0301,0303,0309,0323),
+      - NFC recompose.
+    """
+    out_chars = []
+    for ch in token:
+        decomp = unicodedata.normalize("NFD", ch)
+        filtered = ''.join(c for c in decomp if c not in _TONE_MARKS)
+        recomposed = unicodedata.normalize("NFC", filtered)
+        out_chars.append(recomposed)
+    return ''.join(out_chars)
+
+def is_vietnamese_syllable(token: str) -> bool:
+    """Check whether a single-token string is a valid Vietnamese syllable."""
+    if not token or not token.strip():
+        return False
+
+    if not TOKEN_ALPHABET_RE.match(token):
+        return False
+    if "-" in token:
+        return False
+
+    tone = get_tone(token)
+    base = remove_tone_marks(token).lower()
+
+    for onset in sorted(ONSETS, key=len, reverse=True):
+        if not base.startswith(onset):
+            continue
+        rest_after_onset = base[len(onset):]
+
+        for coda in sorted(CODAS, key=len, reverse=True):
+            if not rest_after_onset.endswith(coda):
+                continue
+            core = rest_after_onset[:len(rest_after_onset)-len(coda)] if coda else rest_after_onset
+
+            allowed_medials = [""] if onset == "qu" else MEDIALS
+            for medial in allowed_medials:
+                if not core.startswith(medial):
+                    continue
+                nucleus = core[len(medial):]
+                if not nucleus:
+                    continue
+
+                # --- Rule 3: nucleus must be valid ---
+                if nucleus not in NUCLEI:
+                    continue
+
+                # --- Rule 1: onset–nucleus compatibility ---
+                if onset == "c" and nucleus[0] in ("i", "e", "ê", "y"):
+                    return False
+                if onset == "k" and nucleus[0] not in ("i", "e", "ê"):
+                    return False
+                if onset in ("g", "ng") and nucleus[0] in ("e", "ê", "i"):
+                    return False
+                if onset in ("gh", "ngh") and nucleus[0] not in ("e", "ê", "i"):
+                    return False
+                if onset == "q" and not core.startswith("u"):
+                    return False
+
+                # --- Rule 4: y usage ---
+                if nucleus == "y" and onset not in ("", "ng", "th", "tr"):
+                    return False
+
+                # --- Rule 2: tone–coda compatibility ---
+                if coda in STOP_CODAS and tone not in ("sắc", "nặng"):
+                    return False
+
+                # Passed all rules
+                return True
+
     return False
 
 
-def is_vietnamese_word(word):
-    # Remove words with hyphen
-    if '-' in word:
+def all_words_vietnamese(text: str) -> bool:
+    """
+    Return True if every whitespace-separated token in text is a valid Vietnamese syllable.
+    (This function treats each token as a syllable; multi-syllable tokens or phrases should be split.)
+    """
+    tokens = [t for t in text.strip().split() if t]
+    return all(is_vietnamese_word(t) for t in tokens) if tokens else False
+
+
+def is_vietnamese_word(token: str) -> bool:
+    """Final check: valid syllable structure, tone rules, and not blacklisted."""
+    if not is_vietnamese_syllable(token):
         return False
-    if not contains_vietnamese_vowel(word):
-        return False
+    # if remove_tone_marks(token).lower() in BLACKLIST:
+    #     return False
+    return True
 
-    # Remove words containing z, f, w, j (case-insensitive)
-    if any(c in word.lower() for c in ['z', 'f', 'w', 'j']):
-        return False
-
-    # Common non-Vietnamese patterns (deduplicated)
-    non_vn_patterns = [
-        # 1. Cụm phụ âm đầu không có trong tiếng Việt
-    "br","bl","cl","cr","dr","fr","gr","pr","trh",
-    "sk","sl","sm","sn","sp","sq","sr","st","sv","sw",
-    "gl","gn","kn","kr","pl","pn","ps","pt","wr","wh",
-    "xk","xr","xt","xz","zz","fl","vl","zl","ml","ql",
-
-    # 2. Cụm phụ âm cuối không tồn tại trong tiếng Việt
-    "mb","mp","nd","nt","ngh","nk","nc","nhk","nhs","nhc","nhm","nhn",
-    "ld","lk","lm","ln","lp","lt","lv","lz","lx",
-    "rb","rd","rg","rk","rl","rm","rn","rp","rs","rt","rv","rx",
-    "sb","sd","sg","sk","sl","sm","sn","sp","sr","st","sv","sx","sz",
-    "tb","tc","td","tf","tg","tk","tl","tm","tn","tp","tr","ts","tv","tx","tz",
-    "zz","xx","ss","vv","ff","dd","bb","cc","gg","hh","jj","kk","ll","mm","nn","pp","qq","rr","yy",
-
-    # 3. Cụm phụ âm ba (triple clusters – không có trong TV)
-    "str","spl","spr","scr","shr","skl","scl","smr",
-    "trn","trm","trd","grd","grm","grn","drm","drn","drd",
-    "brn","brm","brd","crn","crm","crd","frn","frm","frd",
-    "prn","prm","prd","krn","krm","krd","pln","plm","pld",
-
-    # 4. Cụm với phụ âm Đ/đ không tồn tại
-    "đr","đl","đm","đn","đp","đt","đv","đx","đg","đh","đk","đs","đq","đz",
-    "rd","ld","md","nd","sd","td","vd","zd","qd",
-
-        # 2. Nguyên âm bất hợp lệ
-         # u + phụ âm không hợp lệ
-    "ub", "ud", "uđ", "ug", "uh", "uk", "ul", "uq", "ur", "us", "uv", "ux", "uz", "uf", "uw", "uj",
-
-    # e +
-    "eb", "ed", "eđ", "eg", "eh", "ek", "el", "eq", "er", "es", "ev", "ex", "ez", "ef", "ew", "ej",
-
-    # o +
-    "ob", "od", "ođ", "og", "oh", "ok", "ol", "oq", "or", "os", "ov", "ox", "oz", "of", "ow", "oj",
-
-    # a +
-    "ab", "ad", "ađ", "ag", "ah", "ak", "al", "aq", "ar", "as", "av", "ax", "az", "af", "aw", "aj",
-
-    # i +
-    "ib", "id", "iđ", "ig", "ih", "ik", "il", "iq", "ir", "is", "iv", "ix", "iz", "if", "iw", "ij",
-
-    # y +
-    "yb", "yd", "yđ", "yg", "yh", "yk", "yl", "yq", "yr", "ys", "yv", "yx", "yz", "yf", "yw", "yj",
-
-        # 3. Vần/chuỗi ngoại lai
-        "ar", "or", "ur", "yl", "og", "oó", "axit", "yu",
-        "aa", "aă", "aâ", "ae", "aê", "ai", "ao", "aô", "aơ", "au", "aư", "ay",
-    "ăa", "ăă", "ăâ", "ăe", "ăê", "ăi", "ăo", "ăô", "ăơ", "ău", "ăư", "ăy",
-    "âa", "âă", "ââ", "âe", "âê", "âi", "âo", "âô", "âơ", "âu", "âư", "ây",
-    "ee", "ei", "eo", "eô", "eơ", "eu", "eư", "ey",
-    "êa", "êă", "êâ", "ee", "êê", "êi", "êo", "êô", "êơ", "êu", "êư", "êy",
-    "ii", "io", "iô", "iơ", "iu", "iư", "iy",
-    "oo", "oô", "oơ", "ou", "oư", "oy",
-    "ôa", "ôă", "ôâ", "ôe", "ôi", "ôo", "ôô", "ôơ", "ôu", "ôư", "ôy",
-    "ơa", "ơă", "ơâ", "ơe", "ơi", "ơo", "ơô", "ơơ", "ơu", "ơư", "ơy",
-    "uu", "uy", "uâ", "uă", "ue", "uê", "uo", "uô", "uơ", "uư",
-    "ưa", "ưă", "ưâ", "ưe", "ưê", "ưi", "ưo", "ưô", "ươ", "ưu", "ươ", "ưy",
-    "yy",
-
-    # Phụ âm đứng liền nhau không hợp lệ
-    "bb","cc","dd","ff","gg","hh","jj","kk","ll","mm","nn",
-    "pp","qq","rr","ss","tt","vv","ww","xx","yy","zz",
-    
-    # Một số tổ hợp phụ âm không có trong tiếng Việt
-    "bk","dq","fx","gz","hz","jt","kv","lw","mz","pq","rx","sy","tz",
-
-        # 4. Âm tiết kết thúc sai thanh
-        "ut", "et", "ot", "at", "it", "yt",
-        "up", "ep", "op", "ap", "ip", "yp",
-        "uc", "ec", "oc", "ac", "ic", "yc",
-
-        # 5. Trigram bất hợp lệ
-        "ace", "aci", "aco", "acu", "acb",
-        "ica", "ice", "ici", "ico", "icu",
-        "eca", "ece", "eci", "eco", "ecu",
-        "eau", "iou", "eon", "ena", "cre",
-        "uou", "oau",
-        "eth", "eta", "eto", "eti", "ete", "etx",
-        "oma", "ome", "omi", "omo", "omu",
-        "ami", "ame", "amo", "amu", "amp", "amy",
-
-        # 6. Phụ âm đôi/cuối bất hợp lệ
-        "ds", "gs", "ls", "ms", "ns", "rs", "vs", "xs", "zs",
-        "aa","bb","cc","dd","ee","ff","gg","hh","ii","jj","kk","ll",
-        "mm","nn","oo","pp","qq","rr","ss","tt","uu","vv","ww","xx","yy","zz", "mn",
-        "cd", "chx", "cn", "cp", "cs", "cy",
-         "đb", "bđ",
-    "đc", "cđ",
-    "đf", "fđ",
-    "đg", "gđ",
-    "đh", "hđ",
-    "đj", "jđ",
-    "đk", "kđ",
-    "đl", "lđ",
-    "đm", "mđ",
-    "đn", "nđ",
-    "đp", "pđ",
-    "đq", "qđ",
-    "đr", "rđ",
-    "đs", "sđ",
-    "đt", "tđ",
-    "đv", "vđ",
-    "đw", "wđ",
-    "đx", "xđ",
-    "đy", "yđ",
-    "đz", "zđ",
-     "ôa", "ôă", "ôâ", "ôe", "ôi", "ôê", "ôo", "ôô", "ôơ", "ôu", "ôư", "ôy",
-    "aô", "ăô", "âô", "eô", "iô", "oô", "ôô", "ơô", "uô", "ưô", "yô",
-
-            "He","Li","Be","Ne","Na","Mg","Al","Si","Cl","Ar","Ca",
-        "Sc","Ti","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge",
-        "As","Se","Br","Kr","Rb","Sr","Zr","Nb","Mo","Tc","Ru",
-        "Rh","Pd","Ag","Cd","In","Sn","Sb","Te","Xe","Cs","Ba",
-        "La","Ce","Pr","Nd","Pm","Sm","Eu","Gd","Tb","Dy","Ho",
-        "Er","Tm","Yb","Lu","Hf","Ta","Re","Os","Ir","Pt","Au",
-        "Hg","Tl","Pb","Bi","Po","At","Rn","Fr","Ra","Ac","Th",
-        "Pa","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No",
-        "Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh",
-        "Fl","Mc","Lv","Ts","Og", "Ct"
-    ]
-
-
-    word_lower = word.lower()
-    if any(pat in word_lower for pat in non_vn_patterns):
-        return False
-    return bool(vietnamese_pattern.match(word))
-
-# Clean the original dictionary and write to a new file
+# === Dictionary Cleaning ===
 input_path = r"c:\Workspace\HCMUS\Voice Processing\vietnamese_phonemizer\resources\VDic_uni.txt"
 output_path = r"c:\Workspace\HCMUS\Voice Processing\vietnamese_phonemizer\resources\VDic_uni_vietnamese.txt"
+
 with open(input_path, encoding="utf-8") as infile, open(output_path, "w", encoding="utf-8") as outfile:
     for line in infile:
         if not line.strip():
             continue
         word = line.split("\t")[0].strip()
-        if is_vietnamese_word(word):
+        if all_words_vietnamese(word):
             outfile.write(line)
 
-# Optionally, still clean the split files as before
+# Clean the split files as well
 split_dir = r"c:\Workspace\HCMUS\Voice Processing\vietnamese_phonemizer\resources\VDic_uni_split"
 if os.path.isdir(split_dir):
     for fname in os.listdir(split_dir):
@@ -181,12 +191,9 @@ if os.path.isdir(split_dir):
         for line in lines:
             fields = line.strip().split("\t")
             word = fields[0].strip() if fields else ""
-            if is_vietnamese_word(word):
+            if all_words_vietnamese(word):
                 kept.append(line)
         with open(fpath, "w", encoding="utf-8") as outfile:
             outfile.writelines(kept)
-        if is_vietnamese_word(word):
-            kept.append(line)
-    with open(fpath, "w", encoding="utf-8") as outfile:
-        outfile.writelines(kept)
+
 print("Done. Cleaned file written to VDic_uni_vietnamese.txt and split files updated.")

@@ -248,3 +248,14 @@ class VietnamesePhonemizer:
     res += self.tone_map[tone.lower()]
     res += extra
     return res
+
+
+  def count_possible_syllables(self):
+      """Compute number of possible Vietnamese syllables (by formula)."""
+      n_onset = len(self.onset_map.keys())
+      n_glide = len(self.glide_map.keys()) + 1   # +1 for no-glide
+      n_nucleus = len(self.nucleus_map.keys())
+      n_coda = len(self.coda_map.keys()) + 1     # +1 for no-coda
+      n_tone = len(self.tone_map.keys())
+
+      return n_onset * n_glide * n_nucleus * n_coda * n_tone
