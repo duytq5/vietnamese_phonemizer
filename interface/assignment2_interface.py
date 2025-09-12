@@ -107,8 +107,14 @@ def create_assignment2_demo():
 
         # UI for SyllableCounter result (show at the beginning, no button needed)
         count = syllable_counter.count_unique_syllables([line.split("\t")[0] for line in dict_loader.get_lines() if line])
-        syllables = ", ".join(sorted(syllable_counter.get_unique_syllables()))
+        # Get unique written syllables (not phonemized)
+        written_syllables = set()
+        for line in dict_loader.get_lines():
+            if line:
+                words = line.split("\t")[0].strip().split()
+                written_syllables.update(words)
+        written_syllables_str = ", ".join(sorted(written_syllables))
         gr.Markdown(f"## Kết quả đếm âm tiết phiên âm duy nhất trong từ điển")
         gr.Textbox(value=str(count), label="Số lượng âm tiết duy nhất", interactive=False)
-        gr.Textbox(value=syllables, label="Danh sách âm tiết duy nhất (cách nhau bởi dấu phẩy)", interactive=False)
+        gr.Textbox(value=written_syllables_str, label="Danh sách âm tiết duy nhất (cách nhau bởi dấu phẩy)", interactive=False)
     return demo

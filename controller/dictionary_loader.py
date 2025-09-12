@@ -1,5 +1,5 @@
 class DictionaryLoader:
-    def __init__(self, path="resources/VDic_uni.txt"):
+    def __init__(self, path="resources/VDic_uni_vietnamese.txt"):
         self.path = path
         self.lines = self._load_dictionary()
 
