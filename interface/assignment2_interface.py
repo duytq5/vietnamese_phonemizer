@@ -1,5 +1,6 @@
 from .sub_assignment_ui import subAssigmentCollapsibleUI
 import gradio as gr
+import os
 import string
 from controller.vietnamese_phonemizer import VietnamesePhonemizer
 from controller.dictionary_loader import DictionaryLoader
@@ -119,10 +120,23 @@ def assignment2_ui_2_2():
         gr.Textbox(value=formula_str, label="Công thức tính số lượng âm tiết khả dĩ", interactive=False)
 
 def assignment2_ui_2_3():
-    ui = subAssigmentCollapsibleUI("2.3/ So sánh 2 con số (2.1) và (2.2) và giải thích lý do tại sao có sự chênh lệch này?", open=True)
+    ui = subAssigmentCollapsibleUI(
+        "2.3/ So sánh 2 con số (2.1) và (2.2) và giải thích lý do tại sao có sự chênh lệch này?",
+        open=True
+    )
+
     with ui.block:
-        with open(r"c:/Workspace/HCMUS/Voice Processing/vietnamese_phonemizer/resources/assignment2.3.md", encoding="utf-8") as f:
+        # folder of the current script
+        script_dir = os.path.dirname(__file__)
+        # go one level up to project root
+        project_root = os.path.abspath(os.path.join(script_dir, ".."))
+        # build relative path to resources
+        md_path = os.path.join(project_root, "resources", "assignment2.3.md")
+
+        # read content
+        with open(md_path, encoding="utf-8") as f:
             md_content = f.read()
+
         gr.Markdown(md_content)
 
 def create_assignment2_demo():

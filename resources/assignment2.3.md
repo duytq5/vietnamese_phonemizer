@@ -10,7 +10,7 @@
 
 - **Âm đầu**: 27 phụ âm (b, c/k/q, ch, d, đ, g/gh, gi, h, kh, l, m, n, ng/ngh, nh, ph, qu, r, s, t, th, tr, v, x, và rỗng).  
 - **Âm đệm**: chỉ có *o, u*.  
-- **Âm chính**: khoảng 22 nguyên âm/diphthong hợp lệ.  
+- **Âm chính**: khoảng 22 nguyên âm hợp lệ.  
 - **Âm cuối**: 8 phụ âm (c, ch, m, n, ng, nh, p, t) hoặc rỗng.  
 - **Thanh điệu**: 6 thanh (ngang, huyền, sắc, hỏi, ngã, nặng).  
 
