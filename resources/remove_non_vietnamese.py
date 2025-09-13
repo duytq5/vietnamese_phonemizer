@@ -167,8 +167,9 @@ def is_vietnamese_word(token: str) -> bool:
     return True
 
 # === Dictionary Cleaning ===
-input_path = r"c:\Workspace\HCMUS\Voice Processing\vietnamese_phonemizer\resources\VDic_uni.txt"
-output_path = r"c:\Workspace\HCMUS\Voice Processing\vietnamese_phonemizer\resources\VDic_uni_vietnamese.txt"
+base_dir = os.path.dirname(__file__)  # folder where this script is located
+input_path = os.path.join(base_dir, "VDic_uni.txt")
+output_path = os.path.join(base_dir, "VDic_uni_vietnamese.txt")
 
 with open(input_path, encoding="utf-8") as infile, open(output_path, "w", encoding="utf-8") as outfile:
     for line in infile:
@@ -179,7 +180,7 @@ with open(input_path, encoding="utf-8") as infile, open(output_path, "w", encodi
             outfile.write(line)
 
 # Clean the split files as well
-split_dir = r"c:\Workspace\HCMUS\Voice Processing\vietnamese_phonemizer\resources\VDic_uni_split"
+split_dir = os.path.join(base_dir, "VDic_uni_split")
 if os.path.isdir(split_dir):
     for fname in os.listdir(split_dir):
         if not fname.startswith("VDic_uni_") or not fname.endswith(".txt"):
