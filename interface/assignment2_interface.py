@@ -76,7 +76,7 @@ def assignment2_ui_2_1():
 def assignment2_ui_2_2():
     ui = subAssigmentCollapsibleUI("2.2/ Số lượng âm tiết khả dĩ có trong tiếng Việt tính theo tổ hợp", open=True)
     with ui.block:
-        gr.Markdown("[Phụ_âm_đầu * Âm_Đệm * Âm_Chính * Âm_Cuối * Thanh_điệu]")
+        gr.Markdown("[Phụ âm đầu * Âm Đệm * Âm Chính * Âm Cuối * Thanh điệu]")
 
         n_onset = len(phonemizer.onset_map)
         n_glide = len(phonemizer.glide_map) + 1  # +1 for no-glide
