@@ -52,12 +52,7 @@ cd vietnamese-phonemizer
 
 2. Install dependencies using uv:
 ```bash
-uv pip install -r requirements.txt
-```
-
-Or if you don't have a requirements.txt file yet:
-```bash
-uv pip install gradio vietnamese-phonemizer
+uv sync
 ```
 
 ### Usage
@@ -130,12 +125,7 @@ cd vietnamese-phonemizer
 
 2. Cài đặt dependencies bằng uv:
 ```bash
-uv pip install -r requirements.txt
-```
-
-Hoặc nếu chưa có file requirements.txt:
-```bash
-uv pip install gradio vietnamese-phonemizer
+uv sync
 ```
 
 ### Cách sử dụng
