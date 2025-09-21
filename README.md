@@ -61,6 +61,11 @@ uv sync
 python main.py
 ```
 
+If you on MacOS
+``bash
+python3 main.py
+``
+
 2. Open your web browser and navigate to the URL shown in the terminal (typically `http://127.0.0.1:7860`)
 
 3. Enter Vietnamese text in the input field and click "Process Input" to get the phonemic transcription
@@ -135,7 +140,7 @@ python main.py
 ```
 Hoặc 
 ```bash 
-python 3 main.py
+python3 main.py
 ```
 
 2. Mở trình duyệt web và truy cập URL được hiển thị trong terminal (thường là `http://127.0.0.1:7860`)
