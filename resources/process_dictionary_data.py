@@ -114,4 +114,3 @@ with open(input_path, encoding="utf-8") as infile, open(output_path, "w", encodi
         if all_words_vietnamese(word):
             outfile.write(line.lower())
 
-print("Done. Cleaned file written to VDic_uni_vietnamese.txt.")

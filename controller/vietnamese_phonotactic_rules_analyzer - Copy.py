@@ -241,8 +241,8 @@ class VietnamesePhonotacticRulesAnalyzer:
                     return False
         
         am_cuoi_tac_phonemic = {self.phonemizer.coda_map[k] for k in ["p", "t", "ch"] if k in self.phonemizer.coda_map}
-        thanh_sac = self.phonemizer.tone_map['sac']
-        thanh_nang = self.phonemizer.tone_map['nang']
+        thanh_sac = self.phonemizer.tone_map['sắc']
+        thanh_nang = self.phonemizer.tone_map['nặng']
         if coda in am_cuoi_tac_phonemic:
             if tone not in {thanh_sac, thanh_nang}:
                 return False
@@ -350,8 +350,8 @@ class VietnamesePhonotacticRulesAnalyzer:
 
         # Quy tắc 2 (từ Slide 21): Âm cuối tắc và Thanh điệu
         plosive_codas_phonemic = {self.phonemizer.coda_map[k] for k in ["p", "t", "ch"] if k in self.phonemizer.coda_map}
-        thanh_sac = self.phonemizer.tone_map['sac']
-        thanh_nang = self.phonemizer.tone_map['nang']
+        thanh_sac = self.phonemizer.tone_map['sắc']
+        thanh_nang = self.phonemizer.tone_map['nặng']
         thanh_dieu_khong_hop_le = {t for t in self.phonemic_tones if t not in {thanh_sac, thanh_nang}}
 
         for am_cuoi_val in plosive_codas_phonemic:

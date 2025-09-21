@@ -36,4 +36,3 @@ with open(input_path, encoding="utf-8") as infile:
 
 for f in handles.values():
     f.close()
-print("Done splitting VDic_uni.txt by first letter.")

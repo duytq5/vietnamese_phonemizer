@@ -127,16 +127,38 @@ def assignment2_ui_2_3():
     )
 
     with ui.block:
-        # folder of the current script
         script_dir = os.path.dirname(__file__)
-        # go one level up to project root
         project_root = os.path.abspath(os.path.join(script_dir, ".."))
-        # build relative path to resources
         md_path = os.path.join(project_root, "resources", "assignment2.3.md")
 
-        # read content
         with open(md_path, encoding="utf-8") as f:
             md_content = f.read()
+
+        syllable_count = syllable_counter.count_unique_syllables([line.split("\t")[0] for line in dict_loader.get_lines() if line])
+        onset_count = len(phonemizer.onset_map)
+        onset_list = ", ".join(sorted(phonemizer.onset_map.keys()))
+        glide_count = len(phonemizer.glide_map) + 1  # +1 for no-glide
+        glide_list = ", ".join(sorted(list(phonemizer.glide_map.keys())) + ["rỗng"])
+        nucleus_count = len(phonemizer.nucleus_map)
+        nucleus_list = ", ".join(sorted(phonemizer.nucleus_map.keys()))
+        coda_count = len(phonemizer.coda_map) + 1  # +1 for no-coda
+        coda_list = ", ".join(sorted(list(phonemizer.coda_map.keys())) + ["rỗng"])
+        tone_count = len(phonemizer.tone_map)
+        tone_list = ", ".join(sorted(phonemizer.tone_map.keys()))
+        possible_syllables = phonemizer.count_possible_syllables()
+
+        md_content = md_content.replace("{SYLLABLE_COUNT}", str(syllable_count))
+        md_content = md_content.replace("{ONSETS_COUNT}", str(onset_count))
+        md_content = md_content.replace("{ONSETS_LIST}", onset_list)
+        md_content = md_content.replace("{GLIDES_COUNT}", str(glide_count))
+        md_content = md_content.replace("{GLIDES_LIST}", glide_list)
+        md_content = md_content.replace("{NUCLEI_COUNT}", str(nucleus_count))
+        md_content = md_content.replace("{NUCLEI_LIST}", nucleus_list)
+        md_content = md_content.replace("{CODAS_COUNT}", str(coda_count))
+        md_content = md_content.replace("{CODAS_LIST}", coda_list)
+        md_content = md_content.replace("{TONES_COUNT}", str(tone_count))
+        md_content = md_content.replace("{TONES_LIST}", tone_list)
+        md_content = md_content.replace("{POSSIBLE_SYLLABLES}", str(possible_syllables))
 
         gr.Markdown(md_content)
 

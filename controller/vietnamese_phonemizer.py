@@ -6,11 +6,11 @@ class VietnamesePhonemizer:
     # Dấu
     self.tone_map = {
       "ngang": "1",
-      "huyen": "2",
-      "nga": "3",
-      "hoi": "4",
-      "sac": "5",
-      "nang": "6",
+      "huyền": "2",
+      "ngã": "3",
+      "hỏi": "4",
+      "sắc": "5",
+      "nặng": "6",
     }
 
     # Phụ âm đầu và âm vị
@@ -163,15 +163,15 @@ class VietnamesePhonemizer:
 
   def check_tone(self, char):
     if char in "áắấéếóốíúớứý":
-      return "sac"
+      return "sắc"
     elif char in "àằầòồèềìùờừỳ":
-      return "huyen"
+      return "huyền"
     elif char in "ãẫẵõỗĩẽễũỡữỹ":
-      return "nga"
+      return "ngã"
     elif char in "ảẩẳẻểỏổỉủởửỷ":
-      return "hoi"
+      return "hỏi"
     elif char in "ạặậịọộẹệụợựỵ":
-      return "nang"
+      return "nặng"
     return None
 
   def find_onset(self, word):
