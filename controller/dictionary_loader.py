@@ -22,7 +22,7 @@ class DictionaryLoader:
                         tag = parts[1].strip() if parts[1].strip() else parts[0].strip()
                         vn_desc = parts[2].strip()
                         en_desc = parts[3].strip() if len(parts) > 3 else ""
-                        tag_defs[tag] = {"vn": vn_desc, "en": en_desc}
+                        tag_defs[tag.lower()] = {"vn": vn_desc, "en": en_desc}
         except Exception as e:
             tag_defs["ERROR"] = {"vn": f"Error loading tagset: {e}", "en": ""}
         return tag_defs
@@ -48,5 +48,6 @@ class DictionaryLoader:
         if defn is None:
             return None
         if lang in ('vn', 'en'):
-            return defn.get(lang)
+            result = defn.get(lang)
+            return result
         return defn
