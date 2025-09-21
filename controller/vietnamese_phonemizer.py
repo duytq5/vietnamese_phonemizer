@@ -23,8 +23,8 @@ class VietnamesePhonemizer:
       "t": "t",
       "th": "t\u02bc",
       "đ": "d",
-      "d": "d",
-      "gi": "d",
+      "d": "z",
+      "gi": "z",
       "r": "ʐ",
       "x": "s",
       "s": "ʂ",
@@ -162,31 +162,35 @@ class VietnamesePhonemizer:
     return " ".join(result)
 
   def check_tone(self, char):
-    if char in "áắấéếóốíúớ":
+    if char in "áắấéếóốíúớứý":
       return "sac"
-    elif char in "àằầòồèềìùờ":
+    elif char in "àằầòồèềìùờừỳ":
       return "huyen"
-    elif char in "ãẫẵõỗĩẽễũỡ":
+    elif char in "ãẫẵõỗĩẽễũỡữỹ":
       return "nga"
-    elif char in "ảẩẳẻểỏổỉủở":
+    elif char in "ảẩẳẻểỏổỉủởửỷ":
       return "hoi"
-    elif char in "ạặậịọộẹệụợ":
+    elif char in "ạặậịọộẹệụợựỵ":
       return "nang"
     return None
 
   def find_onset(self, word):
-    if word[0].lower() not in self.single_onset:
-      return ""
-    elif word[0].lower() in self.possible_double_onset:
-      if word[:2].lower() in self.double_onset:
-        if word[:3].lower() in self.triple_onset:
-          return word[:3]
-        else:
-          return word[:2]
-      else:
-        return word[:1]
-    else:
-      return word[0]
+    word = word.lower()
+
+    # kiểm tra 3 ký tự trước
+    if len(word) >= 3 and word[:3] in self.triple_onset:
+        return word[:3]
+
+    # kiểm tra 2 ký tự
+    if len(word) >= 2 and (word[:2] in self.double_onset or word[:2] == "gi"):
+        return word[:2]
+
+    # mặc định 1 ký tự
+    if word[0] in self.single_onset:
+        return word[0]
+
+    return ""
+
 
   def find_glide(self, word, onset):
     val = word[:1]

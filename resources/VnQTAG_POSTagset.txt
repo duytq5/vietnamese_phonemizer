@@ -1,0 +1,50 @@
+VCL 	VnQtag 
+Nn	Np	danh từ riêng	proper noun
+Ns	Nc	danh từ đơn thể	countable noun
+Nc	Ng	danh từ tổng thể	collective noun
+L	Nt	danh từ loại thể	classifier noun 
+Nu	Nu	danh từ chỉ đơn vị	concrete noun
+N	Na	danh từ trừu tượng	abstract noun
+N	Nn	danh từ số lượng	numeral
+N	Nl	danh từ vị trí	locative noun
+Vt	Vt	động từ ngoại động	transitive verb
+Vi	Vit	động từ nội động	intransitive verb
+V	Vim	động từ cảm nghĩ	impression verb
+D	Vo	động từ chỉ hướng	orientation verb
+Ve	Vs	động từ tồn tại	state verb
+V	Vb	động từ biến hoá	transformation verb
+V	Vv	động từ ý chí	volotive verb
+V	Va	động từ tiếp thụ	acceptation verb
+V	Vc	động từ so sánh	comparative verb
+V	Vm	động từ chuyển động	move verb
+Vb	Vla	động từ "là"	“là” verb
+Vt	Vtim	động từ ngoại động cảm nghĩ	transitive-impression verb 
+Vt	Vta	động từ ngoại động tiếp thụ	transitive-acceptation verb
+Vt	Vtc	động từ ngoại động so sánh	transitive-comparative verb
+Vt	Vtb	động từ ngoại động biến hoá	transitive-transformation verb
+Vt	Vto	động từ ngoại động chỉ hướng	transitive-orientation verb
+Vt	Vts	động từ ngoại động tồn tại	transitive-state verb
+Vt	Vtm	động từ ngoại động chuyển động	transitive-move verb
+Vt	Vtv	động từ ngoại động ý chí	transitive-volotive verb
+Vi	Vitim	động từ nội động cảm nghĩ	intransitive-impression verb
+Vi	Vitb	động từ nội động biến hoá	intransitive-transformation verb
+Vi	Vits	động từ nội động tồn tại	intransitive-state verb
+Vi	Vitc	động từ nội động so sánh	intransitive-comparative verb
+Vi	Vitm	động từ nội động chuyển động	intransitive-move verb
+Ja	Aa	tính từ hàm chất	quality adjective
+Jq	An	tính từ hàm lượng	quantity adjective
+Pr	Pp	đại từ xưng hô	personal pronoun
+P	Pd	đại từ không gian, thời gian	demonstrative pronoun
+P	Pn	đại từ số lượng	quantity pronoun
+P	Pa	đại từ hoạt động, tính chất	quality pronoun
+Pq	Pi	đại từ nghi vấn	interrogative pronoun
+Rt	Jt	phụ từ chỉ thời gian	time adjunct
+Rm	Jd	phụ từ chỉ mức độ	degree adjunct
+Rc	Jr	phụ từ so sánh	rapport adjunct
+Ra	Ja	phụ từ khẳng định, phủ định	adjunct of negation and acceptation
+Ri	Ji	phụ từ mệnh lệnh	imperative adjunct
+I	Cm	giới từ	major/minor conjunction
+C	Cc	liên từ	combination conjunction
+U	E	cảm từ	emotion word
+M	I	trợ từ	introductory word
+X	X	không xác định	

@@ -5,6 +5,7 @@ import string
 from controller.vietnamese_phonemizer import VietnamesePhonemizer
 from controller.dictionary_loader import DictionaryLoader
 from controller.syllable_counter import SyllableCounter
+from controller.vietnamese_phonotactic_rules_analyzer import VietnamesePhonotacticRulesAnalyzer
 
 PAGE_SIZE = 12
 
@@ -139,6 +140,13 @@ def assignment2_ui_2_3():
 
         gr.Markdown(md_content)
 
+def assignment2_ui_2_4():
+    ui = subAssigmentCollapsibleUI("2.4/ Phân tích quy luật ngữ âm - ngữ pháp - ngữ nghĩa của tiếng Việt", open=True)
+    with ui.block:
+        analyzer = VietnamesePhonotacticRulesAnalyzer(phonemizer, dict_loader)
+        rules = analyzer.analyze_all_rules()
+        gr.Markdown("\n".join(rules))
+
 def create_assignment2_demo():
     with gr.Blocks(css=custom_css) as demo:
         gr.Markdown("# Đồ án giữa kỳ #2")
@@ -189,4 +197,5 @@ def create_assignment2_demo():
     assignment2_ui_2_1()
     assignment2_ui_2_2()
     assignment2_ui_2_3()
+    assignment2_ui_2_4()
     return demo
